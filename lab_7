@@ -1,0 +1,90 @@
+#include <iostream>
+#include <string>
+#include <stdexcept>
+#include <cctype>  // For checking if a character is a digit
+
+// XOR Encryption (simplified)
+std::string xorEncryptDecrypt(const std::string& data, const char key) {
+    std::string result = data;
+    for (size_t i = 0; i < data.size(); ++i) {
+        result[i] = data[i] ^ key;  // XOR each byte with the key
+    }
+    return result;
+}
+
+// Run-Length Encoding (RLE) Compression
+std::string rleCompress(const std::string& data) {
+    std::string compressed;
+    int n = data.size();
+
+    for (int i = 0; i < n; i++) {
+        // Count occurrences of the same character
+        int count = 1;
+        while (i < n - 1 && data[i] == data[i + 1]) {
+            i++;
+            count++;
+        }
+        compressed += data[i] + std::to_string(count); // Append the character and its count
+    }
+    return compressed;
+}
+
+// Run-Length Encoding (RLE) Decompression
+std::string rleDecompress(const std::string& compressed) {
+    std::string decompressed;
+    int n = compressed.size();
+    
+    for (int i = 0; i < n; ) {
+        char currentChar = compressed[i];
+        i++;  // Move past the character
+
+        // Read the number after the character (the count)
+        int count = 0;
+        while (i < n && std::isdigit(compressed[i])) {
+            count = count * 10 + (compressed[i] - '0');
+            i++;
+        }
+
+        // Repeat the character based on the count
+        decompressed.append(count, currentChar);
+    }
+    return decompressed;
+}
+
+int main() {
+    try {
+        // Original data
+        std::string originalData = "aaabbbbbccddddd";
+        std::cout << "Original Data: " << originalData << "\n";
+
+        // Step 1: Compress the data using Run-Length Encoding (RLE)
+        std::string compressedData = rleCompress(originalData);
+        std::cout << "Compressed Data: " << compressedData << "\n";
+
+        // Step 2: Encrypt the compressed data (XOR encryption)
+        char key = 'K'; // A simple key for XOR encryption
+        std::string encryptedData = xorEncryptDecrypt(compressedData, key);
+        std::cout << "Encrypted Data: " << encryptedData << "\n";
+
+        // Step 3: Decrypt the data (XOR decryption)
+        std::string decryptedCompressedData = xorEncryptDecrypt(encryptedData, key);
+        std::cout << "Decrypted Compressed Data: " << decryptedCompressedData << "\n";
+
+        // Step 4: Decompress the decrypted data using Run-Length Encoding (RLE)
+        std::string decompressedData = rleDecompress(decryptedCompressedData);
+        std::cout << "Decompressed Data: " << decompressedData << "\n";
+
+        // Verify
+        if (originalData == decompressedData) {
+            std::cout << "Success! The decompressed data matches the original.\n";
+        } else {
+            std::cerr << "Error: The decompressed data does not match the original.\n";
+        }
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << "\n";
+        return 1;
+    }
+
+    return 0;
+}
